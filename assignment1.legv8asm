@@ -13,11 +13,20 @@ main:
     HALT             // Stops execution and dumps core
 
 fill:
-    // Arguments: X0 = array address, X1 = size
-    // TODO: Write your loop here to populate the array
+    // x0 = unsigned long *a, x1 = long n
+    LSL  x2, x1, #3 // n * sizeof(long)
+    ADD  x2, x0, x2 // n = a + n // cast n as long*
 
-    // Example: Print X1 to prove we got here
-    PRNT X1
-    PRNL
+start:
+    CMP  x0, x2
+    B.GE end
 
-    BR LR            // Branch to Register (Return to caller)
+    SUB  x3, x2, x0 // remaining bytes
+    LSR  x3, x3, #3 // elements remaining = n - i
+    STUR x3, [x0, #0] // *(a) = n - i
+
+    ADDI x0, x0, #8 // a++ // (byte)a += 8
+    B start
+
+end:
+    BR x30 // return
