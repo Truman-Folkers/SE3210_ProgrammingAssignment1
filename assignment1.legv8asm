@@ -12,21 +12,54 @@ main:
     // 3. Stop the program
     HALT             // Stops execution and dumps core
 
+// start fill procedure
 fill:
     // x0 = unsigned long *a, x1 = long n
     LSL  x2, x1, #3 // n * sizeof(long)
     ADD  x2, x0, x2 // n = a + n // cast n as long*
 
-start:
+fill_start_loop:
     CMP  x0, x2
-    B.GE end
+    B.GE fill_end_loop //if x0 > x2 go to end (loop condition)
 
     SUB  x3, x2, x0 // remaining bytes
     LSR  x3, x3, #3 // elements remaining = n - i
     STUR x3, [x0, #0] // *(a) = n - i
 
     ADDI x0, x0, #8 // a++ // (byte)a += 8
-    B start
+    B fill_start_loop
 
-end:
+fill_end_loop:
     BR x30 // return
+//end fill procedure
+
+// start check_sorted procedure 
+check_sorted:
+SUBI SP, SP, #16 //allocate stack space
+ADD x2, x2, xzr //allocate i, x0 = *a and x1 = n
+
+check_sorted_start_loop:
+CMP x1, x2
+B.GE check_sorted_end_loop
+
+LDUR SP, [x0, #?] //load a[i-1]
+LDUR SP, [x0, #?] //load a[i]
+
+B.LE check_sorted_end_loop //have to do the 1 and 0 return logic
+
+check_sorted_end_loop:
+BR x30 //return
+
+(unsigned long *a, long n)
+{
+  long i;
+
+  for (i = 1; i < n; i++) {
+    if (a[i - 1] > a[i]) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+// end check_sorted procedure
