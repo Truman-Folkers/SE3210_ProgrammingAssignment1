@@ -1,0 +1,23 @@
+// Name: Truman Folkers, NetID: tfolkers
+// Name: Michael, NetID: [NetID]
+
+main:
+    // 1. Set up arguments for the fill procedure
+    MOV X0, #0       // Arg 1 (X0): Array base address (Memory starts at 0)
+    MOV X1, #5       // Arg 2 (X1): Array size (e.g., 5 elements)
+
+    // 2. Call fill
+    BL fill          // Branch and Link to the fill procedure
+
+    // 3. Stop the program
+    HALT             // Stops execution and dumps core
+
+fill:
+    // Arguments: X0 = array address, X1 = size
+    // TODO: Write your loop here to populate the array
+
+    // Example: Print X1 to prove we got here
+    PRNT X1
+    PRNL
+
+    BR LR            // Branch to Register (Return to caller)
