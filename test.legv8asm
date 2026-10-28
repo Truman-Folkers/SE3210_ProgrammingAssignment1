@@ -1,0 +1,23 @@
+main:
+    MOV X0, #0         // Array base address = 0
+    MOV X1, #3         // Array size (n) = 3
+    BL fill
+    DUMP               // Dumps registers and memory to the console
+    HALT
+
+fill:
+    MOV X2, XZR        // i = 0
+fill_loop:
+    CMP X2, X1         // Compare i and n
+    B.GE fill_end      // If i >= n, exit loop
+
+    SUB X3, X1, X2     // X3 (val) = n - i
+    LSL X4, X2, #3     // X4 (offset) = i * 8
+    ADD X4, X0, X4     // X4 (address) = base + offset
+    STUR X3, [X4, #0]  // Store val into memory at address
+
+    ADDI X2, X2, #1    // i++
+    B fill_loop
+
+fill_end:
+    BR X30             // Return to caller
