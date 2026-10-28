@@ -175,3 +175,40 @@ quad_sort_helper_end:
 
 //---------------------------------------------------------------------------
 
+quad_sort_shift:
+    // X0 = a, X1 = last, X2 = hole
+    ADD X3, X1, XZR        // X3 = i (starts at last)
+
+quad_sort_shift_loop:
+    SUBS XZR, X3, X2   
+    B.EQ quad_sort_shift_end //if i == hole, exit loop
+
+    //load a[i]
+    SUBI X4, X3, #1        // X4 = i - 1
+    LSL X4, X4, #3         // X4 = (i - 1) * 8
+    ADD X4, X0, X4         // X4 = &a[i-1]
+    LDUR X5, [X4, #0]      // X5 = value of a[i-1]
+
+    //store into a[i]
+    LSL X6, X3, #3         // X6 = i * 8 
+    ADD X6, X0, X6         // X6 = &a[i]
+    STUR X5, [X6, #0]      // a[i] = a[i-1]
+
+    //decrement loop counter
+    SUBI X3, X3, #1        // i--
+    B quad_sort_shift_loop
+
+quad_sort_shift_end:
+    BR LR
+
+//---------------------------------------------------------------------------
+
+quad_sort_merge:
+
+quad_sort_merge_end:
+
+//---------------------------------------------------------------------------
+
+quad_sort:
+
+quad_sort_end:
