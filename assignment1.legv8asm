@@ -2,128 +2,176 @@
 // Name: Michael, NetID: [NetID]
 
 main:
-    // 1. Set up arguments for the fill procedure
-    MOV X0, #0       // Arg 1 (X0): Array base address (Memory starts at 0)
-    MOV X1, #5       // Arg 2 (X1): Array size (e.g., 5 elements)
+    // 1. Fill the array with [3, 2, 1]
+    ADDI X0, XZR, #0       // Arg 1 (a) = 0
+    ADDI X1, XZR, #3       // Arg 2 (n) = 3
+    BL fill
 
-    // 2. Call fill
-    BL fill          // Branch and Link to the fill procedure
+    // 2. Execute the sort (Outer loop)
+    ADDI X0, XZR, #0       // Reset Arg 1 (a) = 0
+    ADDI X1, XZR, #3       // Reset Arg 2 (n) = 3
+    BL quad_sort_helper    // Should sort the array to [1, 2, 3]
 
-    // 3. Stop the program
-    HALT             // Stops execution and dumps core
+    // 3. Verify it sorted correctly
+    ADDI X0, XZR, #0       // Reset Arg 1 (a) = 0
+    ADDI X1, XZR, #3       // Reset Arg 2 (n) = 3
+    BL check_sorted        // Returns 0 in X0 if sorted
 
-// start fill procedure
+    // 4. Output the results
+    PRNT X0                // Should print 0
+    PRNL                   
+    DUMP                   // Dumps memory to visually confirm array layout
+    HALT
+
+//---------------------------------------------------------------------------
+
 fill:
     // x0 = unsigned long *a, x1 = long n
-    LSL  x2, x1, #3 // n * sizeof(long)
-    ADD  x2, x0, x2 // n = a + n // cast n as long*
+    ADD  x4, x0, XZR        // X4 = copy of base address (preserves X0)
+    LSL  x2, x1, #3         // x2 = n * 8 (total byte size)
+    ADD  x2, x0, x2         // x2 = end address (base + n*8)
 
-fill_start_loop:
-    CMP  x0, x2
-    B.GE fill_end_loop //if x0 > x2 go to end (loop condition)
+fill_loop:
+    SUBS XZR, x4, x2        // Compare current address (X4) to end address (X2)
+    B.GE fill_end           // if current >= end, go to end
 
-    SUB  x3, x2, x0 // remaining bytes
-    LSR  x3, x3, #3 // elements remaining = n - i
-    STUR x3, [x0, #0] // *(a) = n - i
+    SUB  x3, x2, x4         // remaining bytes = end address - current address
+    LSR  x3, x3, #3         // elements remaining = remaining bytes / 8
+    STUR x3, [x4, #0]       // Store value at current address
 
-    ADDI x0, x0, #8 // a++ // (byte)a += 8
-    B fill_start_loop
+    ADDI x4, x4, #8         // Move current address forward by 8 bytes
+    B fill_loop
 
-fill_end_loop:
-    BR x30 // return
-//end fill procedure
+fill_end:
+    BR x30                  // return
 
-// start check_sorted procedure 
+//---------------------------------------------------------------------------
+
 check_sorted:
-SUBI SP, SP, #16 //allocate stack space
-ADD x2, x2, xzr //allocate i, x0 = *a and x1 = n
+    ADDI  x3, x0, #8        // X3 = copy of base address (preserves X0)
+    LSL  x2, x1, #3         // x2 = n * 8 (total byte size)
+    ADD  x2, x0, x2         // x2 = end address (base + n*8)
 
-check_sorted_start_loop:
-CMP x1, x2
-B.GE check_sorted_end_loop
+check_sorted_loop:
+    SUBS XZR, x3, x2        // Compare current address (X3) to end address (X2)
+    B.GE check_sorted_end   // if current >= end, go to end
 
-LDUR SP, [x0, #?] //load a[i-1]
-LDUR SP, [x0, #?] //load a[i]
+    SUBI x3, x3, #8         //move x3 back to grab i-1
+    LDUR x4, [x3, #0]       //grab a[i-1]
+    ADDI x3, x3, #8         //move x3 forwards again
+    LDUR x5, [x3, #0]       //load a[i] into X5
 
-B.LE check_sorted_end_loop //have to do the 1 and 0 return logic
+    SUBS XZR, x4, x5
+    B.GT check_sorted_early_return      //if x4 > x5 branch to returning 1
+    
+    ADDI x3, x3, #8         // Move current address forward by 8 bytes
+    B check_sorted_loop
 
-check_sorted_end_loop:
-BR x30 //return
+check_sorted_early_return:
+    ADDI x0, XZR, #1  //return 1
+    BR x30 //return
 
-(unsigned long *a, long n)
-{
-  long i;
+check_sorted_end:
+    ADD x0, XZR, XZR
+    BR x30 //return
 
-  for (i = 1; i < n; i++) {
-    if (a[i - 1] > a[i]) {
-      return 1;
-    }
-  }
+//---------------------------------------------------------------------------
 
-  return 0;
-}
-// end check_sorted procedure
-
-
-// start swap procedure
 swap:
     // X0 = unsigned long *a, X1 = long i, X2 = long j
 
-    LSL X1, X1, #3    // i * sizeof(unsigned long)
-    ADD X3, X0, X1    // &a[i]
-    LDUR X4, [X3, #0] // tmp = a[i]
+    LSL x1, x1, #3    // i * sizeof(unsigned long)
+    ADD x3, x0, x1    // &a[i]
+    LDUR x4, [x3, #0] // tmp = a[i]
 
-    LSL X2, X2, #3    // j * sizeof(unsigned long)
-    ADD X5, X0, X2    // &a[j]
-    LDUR X6, [X5, #0] // internal1 = a[j]
+    LSL x2, x2, #3    // j * sizeof(unsigned long)
+    ADD x5, x0, x2    // &a[j]
+    LDUR x6, [x5, #0] // internal1 = a[j]
 
-    STUR X6, [X3, #0] // a[i] = internal1
-    STUR X4, [X5, #0] // a[j] = tmp
+    STUR x6, [x3, #0] // store value of a[j] in x3 which is &a[i]
+    STUR x4, [x5, #0] // vice versa ^
 
-    BR X30
-// end swap procedure
+    BR x30
 
-// start quad_sort_helper_helper
+//---------------------------------------------------------------------------
+
 quad_sort_helper_helper:
-    // X0 = a, X1 = n, X2 = i
+    SUBI SP, SP, #32        // Allocate 32 bytes on the stack for 4 registers
+    STUR LR, [SP, #24]      // Save Link Register (X30)
+    STUR x19, [SP, #16]     // Save original X19
+    STUR x20, [SP, #8]      // Save original X20
+    STUR x21, [SP, #0]      // Save original X21
 
-    SUBI SP, SP, #16
-    STUR X30, [SP, #8]
+    ADD x19, x1, XZR        // X19 = n
+    ADD x20, x2, XZR        // X20 = i
+    ADD x21, XZR, XZR       // X21 = j (starts at 0)
 
-    // save registers
-    MOV X9, X1 // n
-    MOV X10, X2 // i
-    MOV X11, XZR // j = 0
+quad_sort_helper_helper_start:
+    SUBS XZR, x21, x19      // Compare j to n
+    B.GE quad_sort_helper_helper_end 
 
-start:
-    SUBS XZR, X11, X9
-    B.GE end // j >= n
+    //Load a[j]
+    LSL x12, x21, #3        // Byte offset for j
+    ADD x12, x0, x12        // Absolute address of a[j]
+    LDUR x13, [x12, #0]     // X13 = a[j]
 
-    // X12 = &a[j]
-    LSL X12, X11, #3
-    ADD X12, X0, X12
-    LDUR X13, [X12, #0] // X13 = a[j]
+    //Load a[i]
+    LSL x14, x20, #3        // Byte offset for i
+    ADD x14, x0, x14        // Absolute address of a[i]
+    LDUR x15, [x14, #0]     // X15 = a[i]
 
-    // X14 = &a[i]
-    LSL X14, X10, #3
-    ADD X14, X0, X14
-    LDUR X15, [X14, #0] // X15 = a[i]
+    //Compare and conditional swap
+    SUBS XZR, x15, x13      // Compare a[i] and a[j]
+    B.GE quad_sort_helper_helper_continue // If a[i] >= a[j], skip swap
 
-    // if (a[i] < a[j]) swap(a, i, j)
-    SUBS XZR, X15, X13
-    B.HS continue // unsigned a[i] >= a[j]
+    //setup and call swap
+    ADD x1, x20, XZR        // Arg 2: i
+    ADD x2, x21, XZR        // Arg 3: j
+    BL swap                 // Base address a is already in X0
 
-    // prepare registers for call
-    MOV X1, X10 // i
-    MOV X2, X11 // j
-    BL swap // X0 still holds a
+quad_sort_helper_helper_continue:
+    ADDI x21, x21, #1       // j++
+    B quad_sort_helper_helper_start
 
-continue:
-    ADDI X11, X11, #1
-    B start
+quad_sort_helper_helper_end:
+    //Stack Teardown (Restore registers in exact reverse order)
+    LDUR x21, [SP, #0]
+    LDUR x20, [SP, #8]
+    LDUR x19, [SP, #16]
+    LDUR LR, [SP, #24]
+    ADDI SP, SP, #32        // Deallocate stack space
+    BR LR                   // Return
 
-end:
-    LDUR X30, [SP, #8]
-    ADDI SP, SP, #16
-    BR X30
-// end quad_sort_helper_helper
+//---------------------------------------------------------------------------
+
+quad_sort_helper:
+    //x0 = *a, x1, n
+    SUBI SP, SP, #24
+    STUR LR, [SP, #16]
+    STUR x19, [SP, #8]
+    STUR x20, [SP, #0]
+
+    ADD x20, x1, XZR        // x20 = n 
+    ADDI x19, XZR, #0       // x19 = i = 0
+
+quad_sort_helper_loop:
+    SUBS XZR, x19, x20
+    B.GE quad_sort_helper_end
+
+    //branch
+    ADD X1, X20, XZR        //arg 2 = n
+    ADD X2, X19, XZR        //arg 3 = i
+    BL quad_sort_helper_helper
+
+    ADDI X19, X19, #1       // i++
+    B quad_sort_helper_loop
+
+quad_sort_helper_end:
+    LDUR X20, [SP, #0]
+    LDUR X19, [SP, #8]
+    LDUR LR, [SP, #16]
+    ADDI SP, SP, #24
+    BR LR
+
+//---------------------------------------------------------------------------
+
