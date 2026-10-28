@@ -63,3 +63,67 @@ BR x30 //return
   return 0;
 }
 // end check_sorted procedure
+
+
+// start swap procedure
+swap:
+    // X0 = unsigned long *a, X1 = long i, X2 = long j
+
+    LSL X1, X1, #3    // i * sizeof(unsigned long)
+    ADD X3, X0, X1    // &a[i]
+    LDUR X4, [X3, #0] // tmp = a[i]
+
+    LSL X2, X2, #3    // j * sizeof(unsigned long)
+    ADD X5, X0, X2    // &a[j]
+    LDUR X6, [X5, #0] // internal1 = a[j]
+
+    STUR X6, [X3, #0] // a[i] = internal1
+    STUR X4, [X5, #0] // a[j] = tmp
+
+    BR X30
+// end swap procedure
+
+// start quad_sort_helper_helper
+quad_sort_helper_helper:
+    // X0 = a, X1 = n, X2 = i
+
+    SUBI SP, SP, #16
+    STUR X30, [SP, #8]
+
+    // save registers
+    MOV X9, X1 // n
+    MOV X10, X2 // i
+    MOV X11, XZR // j = 0
+
+start:
+    SUBS XZR, X11, X9
+    B.GE end // j >= n
+
+    // X12 = &a[j]
+    LSL X12, X11, #3
+    ADD X12, X0, X12
+    LDUR X13, [X12, #0] // X13 = a[j]
+
+    // X14 = &a[i]
+    LSL X14, X10, #3
+    ADD X14, X0, X14
+    LDUR X15, [X14, #0] // X15 = a[i]
+
+    // if (a[i] < a[j]) swap(a, i, j)
+    SUBS XZR, X15, X13
+    B.HS continue // unsigned a[i] >= a[j]
+
+    // prepare registers for call
+    MOV X1, X10 // i
+    MOV X2, X11 // j
+    BL swap // X0 still holds a
+
+continue:
+    ADDI X11, X11, #1
+    B start
+
+end:
+    LDUR X30, [SP, #8]
+    ADDI SP, SP, #16
+    BR X30
+// end quad_sort_helper_helper
