@@ -351,8 +351,31 @@ quad_sort:
     BL quad_sort_merge
 
     //second merge call
+    LSR x2, x20, #2 //x2 = n >> 2
+    LSL x3, x2, #1 //x3 = n >> 2 << 1
 
+    //setting up for branch
+    ADD x0, x19, XZR
+    ADD x1, x3, XZR
+    ADD x2, x2, x3
+
+    BL quad_sort_merge
 
     //third merge call
+    LSR x2, x20, #2 //x2 = n >> 2
+    LSL x3, x2, #1 //x3 = n >> 2 << 1
 
+    ADD x0, x19, XZR
+    ADD x1, x2, x3
+    ADD x2, x20, XZR
+
+    BL quad_sort_merge
+
+    //tear down stack
+    LDUR x20, [SP, #0]
+    LDUR x19, [SP, #8]
+    LDUR LR, [SP, #16]
+    ADDI SP, SP, #24
+
+    BR LR
 
