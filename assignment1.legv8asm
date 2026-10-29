@@ -293,5 +293,60 @@ quad_sort_merge_end:
 //---------------------------------------------------------------------------
 
 quad_sort:
+    //x0 = a, x1 = n
+    //setup stack
+    SUBI SP, SP, #16
+    STUR x19, [SP, #8] //a
+    STUR x20, [SP, #0] //n
 
-quad_sort_end:
+    ADD x19, x0, XZR  //x19 = a
+    ADD x20, x1, XZR  //x20 = n
+
+    //first helper call
+    LSR x2, x20, #2
+    ADD x1, x2, XZR //x1 = n >>2
+
+    BL quad_sort_helper
+
+    //second helper call
+    LSR x2, x20, #2
+    ADD x0, x19, x2     //x0 = a + n >> 2
+    ADD x1, x2, XZR     //x1 = n >>2
+
+    BL quad_sort_helper
+
+    //third helper call
+    LSR x2, x20, #2
+    ADD x1, x2, XZR     //x1 = n >> 2
+    LSL x2, x2, #1      //n >> 2 << 1
+    ADD x0, x19, x2     //x0 = a + n >> 2
+
+    BL quad_sort_helper
+
+    //fourth helper call
+    LSR x2, x20, #2 //x2 = n >> 2
+    LSL x3, x2, #1  //x3 = n >> 2 << 1
+    ADD x4, x2, x3
+    ADD x0, x19, x4 //a + ((n >> 2) + ((n >> 2 << 1)))
+
+    SUB x1, x20, x2
+    ADD x1, x1, x3 //n - ((n >> 2)) + ((n >> 2) << 1)
+
+    BL quad_sort_helper
+
+    //first merge call
+    LSR x3, x20, #2 //x3 = n >> 2
+    LSL x4, x3, #1 //x4 = n >> 2 << 1
+
+    ADD x0, x19, XZR
+    ADD x1, x3, XZR
+    ADD x2, x4, XZR
+
+    BL quad_sort_merge
+
+    //second merge call
+
+
+    //third merge call
+
+

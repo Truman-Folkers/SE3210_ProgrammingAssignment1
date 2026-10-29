@@ -151,6 +151,11 @@ void quad_sort(unsigned long *a, long n)
   quad_sort_merge(a, (n >> 2) + ((n >> 2) << 1), n);
 }
 
+//x19 = a
+//x20 = n
+//when you're writing code as comments to explain
+//other code that's when you know you're cooked
+
 /* Populates array a of n elements with the values 1 through n, inclusive, in
  * descending order.
  */
