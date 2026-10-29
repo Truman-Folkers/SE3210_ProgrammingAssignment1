@@ -159,16 +159,16 @@ quad_sort_helper_loop:
     B.GE quad_sort_helper_end
 
     //branch
-    ADD X1, X20, XZR        //arg 2 = n
-    ADD X2, X19, XZR        //arg 3 = i
+    ADD x1, x20, XZR        //arg 2 = n
+    ADD x2, x19, XZR        //arg 3 = i
     BL quad_sort_helper_helper
 
-    ADDI X19, X19, #1       // i++
+    ADDI x19, x19, #1       // i++
     B quad_sort_helper_loop
 
 quad_sort_helper_end:
-    LDUR X20, [SP, #0]
-    LDUR X19, [SP, #8]
+    LDUR x20, [SP, #0]
+    LDUR x19, [SP, #8]
     LDUR LR, [SP, #16]
     ADDI SP, SP, #24
     BR LR
@@ -177,25 +177,25 @@ quad_sort_helper_end:
 
 quad_sort_shift:
     // X0 = a, X1 = last, X2 = hole
-    ADD X3, X1, XZR        // X3 = i (starts at last)
+    ADD x3, x1, XZR        // X3 = i (starts at last)
 
 quad_sort_shift_loop:
-    SUBS XZR, X3, X2   
+    SUBS XZR, x3, x2   
     B.EQ quad_sort_shift_end //if i == hole, exit loop
 
     //load a[i]
-    SUBI X4, X3, #1        // X4 = i - 1
-    LSL X4, X4, #3         // X4 = (i - 1) * 8
-    ADD X4, X0, X4         // X4 = &a[i-1]
-    LDUR X5, [X4, #0]      // X5 = value of a[i-1]
+    SUBI x4, x3, #1        // X4 = i - 1
+    LSL x4, x4, #3         // X4 = (i - 1) * 8
+    ADD x4, x0, x4         // X4 = &a[i-1]
+    LDUR x5, [x4, #0]      // X5 = value of a[i-1]
 
     //store into a[i]
-    LSL X6, X3, #3         // X6 = i * 8 
-    ADD X6, X0, X6         // X6 = &a[i]
-    STUR X5, [X6, #0]      // a[i] = a[i-1]
+    LSL x6, x3, #3         // X6 = i * 8 
+    ADD x6, x0, x6         // X6 = &a[i]
+    STUR x5, [x6, #0]      // a[i] = a[i-1]
 
     //decrement loop counter
-    SUBI X3, X3, #1        // i--
+    SUBI x3, x3, #1        // i--
     B quad_sort_shift_loop
 
 quad_sort_shift_end:
@@ -205,10 +205,14 @@ quad_sort_shift_end:
 
 quad_sort_merge:
     //x0 = a, x1 = an, x2 = n
-    //might need to allocate stack space if we want to
-    //keep these vars, do they leave when branched?
-    ADDI x3, xzr, #0    //x3 = ai = 0
-    ADDI x4, x1, #0     //x4 = bi = an
+    
+    SUBI SP, SP, #24
+    STUR LR, [SP, #16]
+    STUR x19, [SP, #8]   //i
+    STUR x20, [SP, #0]  //ai
+
+    ADDI x20, xzr, #0    //ai = 0
+    ADDI x3 x1, #0     //x3 = bi = an
 
     //compare a[an - 1] > a[bi] and branch to end if not
     SUBI x5, x1, #1
@@ -227,9 +231,33 @@ quad_sort_merge:
     B.LE quad_sort_merge_end
 
 quad_sort_merge_loop:
+    //loop condition
+    SUBS XZR, x1, x20
+    B.GE quad_sort_merge_end
+    SUBS XZR, x3, x2 
+    B.GE quad_sort_merge_end
 
+    //if condition
+    ADD x4, x20, x0
+    LDUR x4, [x4, #0] //grabbing a[ai]
+
+    SUBS XZR, x4, x
+    B.GE quad_sort_merge_if
+    
+    //else condition
+
+
+    //branch register to quad_sort_shift 
+
+quad_sort_merge_if:
+    ADDI x20, x20, #1
+    B quad_sort_merge_loop
 
 quad_sort_merge_end:
+    LDUR X20, [SP, #0]
+    LDUR X19, [SP, #8]
+    LDUR LR, [SP, #16]
+    ADDI SP, SP, #24
     BR LR
 
 //---------------------------------------------------------------------------
