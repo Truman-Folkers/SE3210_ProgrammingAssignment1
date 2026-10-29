@@ -6,34 +6,30 @@ main:
     ADDI X19, XZR, #0       // X19 = a = 0 (Base memory address)
     ADDI X20, XZR, #16      // X20 = N = 16 (Test array size)
 
-    // 2. Call fill(a, N)
+    //call fill(a, N)
     ADD X0, X19, XZR        // Arg 1: a
     ADD X1, X20, XZR        // Arg 2: N
     BL fill
 
-    // 3. Call quad_sort(a, N)
+    //call quad_sort(a, N)
     ADD X0, X19, XZR        // Arg 1: a
     ADD X1, X20, XZR        // Arg 2: N
     BL quad_sort
 
-    // 4. Call check_sorted(a, N)
+    //call check_sorted(a, N)
     ADD X0, X19, XZR        // Arg 1: a
     ADD X1, X20, XZR        // Arg 2: N
     BL check_sorted
 
-    // 5. Evaluate results 
-    // (Assuming check_sorted returns 1 if sorted, and 0 if unsorted)
     SUBS XZR, X0, XZR       // Compare return value (X0) to 0
-    B.EQ not_sorted_trap    // If X0 == 0 (unsorted), branch to the trap
+    B.EQ trap    //If X0 == 0 (unsorted), branch to the trap
 
     // 6. Success state (Sorted)
-    DUMP                    // Visually verify the sorted memory layout
-    HALT                    // Terminate the emulator properly
+    DUMP                   
+    HALT                   
 
-not_sorted_trap:
-    // 7. Failure state (Unsorted)
-    // Infinite loop simulates the "should not actually halt" requirement
-    B not_sorted_trap
+trap:
+    B trap
 
 //---------------------------------------------------------------------------
 
