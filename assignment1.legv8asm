@@ -295,7 +295,8 @@ quad_sort_merge_end:
 quad_sort:
     //x0 = a, x1 = n
     //setup stack
-    SUBI SP, SP, #16
+    SUBI SP, SP, #24
+    STUR LR, [SP, #16]
     STUR x19, [SP, #8] //a
     STUR x20, [SP, #0] //n
 
@@ -305,20 +306,24 @@ quad_sort:
     //first helper call
     LSR x2, x20, #2
     ADD x1, x2, XZR //x1 = n >>2
+    ADD X0, X19, XZR
 
     BL quad_sort_helper
 
     //second helper call
-    LSR x2, x20, #2
-    ADD x0, x19, x2     //x0 = a + n >> 2
-    ADD x1, x2, XZR     //x1 = n >>2
-
+    LSR X2, X20, #2      //x2 = n >> 2
+    ADD X1, X2, XZR      //put n >> 2 in x1
+    
+    LSL X2, X2, #3    //scale x2 for mem offset
+    ADD X0, X19, X2   //a + (scaled offset)
+    
     BL quad_sort_helper
 
     //third helper call
     LSR x2, x20, #2
     ADD x1, x2, XZR     //x1 = n >> 2
     LSL x2, x2, #1      //n >> 2 << 1
+    LSL x2, x2, #3 //map data correctly
     ADD x0, x19, x2     //x0 = a + n >> 2
 
     BL quad_sort_helper
@@ -326,12 +331,13 @@ quad_sort:
     //fourth helper call
     LSR x2, x20, #2 //x2 = n >> 2
     LSL x3, x2, #1  //x3 = n >> 2 << 1
-    ADD x4, x2, x3
-    ADD x0, x19, x4 //a + ((n >> 2) + ((n >> 2 << 1)))
+    ADD x4, x2, x3  //add the two
 
-    SUB x1, x20, x2
-    ADD x1, x1, x3 //n - ((n >> 2)) + ((n >> 2) << 1)
+    LSL X5, X4, #3
+    ADD x0, x19, x5   //a + ((n >> 2) + ((n >> 2 << 1)))
 
+    SUB x1, x20, X4
+    
     BL quad_sort_helper
 
     //first merge call
