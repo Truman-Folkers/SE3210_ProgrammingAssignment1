@@ -220,7 +220,7 @@ quad_sort_merge:
     ADDI x22, XZR, #0       // x22 = ai = 0
     ADD x23, x20, XZR       // x23 = bi = an
 
-    // 3. Initial If Condition: if (a[an - 1] > a[bi])
+    // first if:  (a[an - 1] > a[bi])
     SUBI x9, x20, #1        // x9 = an - 1
     LSL x9, x9, #3          // x9 = (an - 1) * 8
     ADD x9, x19, x9         // x9 = &a[an - 1]
@@ -230,28 +230,28 @@ quad_sort_merge:
     ADD x11, x19, x11       // x11 = &a[bi]
     LDUR x12, [x11, #0]     // x12 = a[bi]
 
-    SUBS XZR, x10, x12      // Compare a[an-1] and a[bi]
-    B.LE quad_sort_merge_end // If a[an-1] <= a[bi], skip while loop entirely
+    SUBS XZR, x10, x12      //cmp a[an-1] and a[bi]
+    B.LE quad_sort_merge_end //if a[an-1] <= a[bi], skip while
 
 quad_sort_merge_while:
-    // 4. While loop conditions: ai < an && bi < n
-    SUBS XZR, x22, x20      // Compare ai to an
+    //while loop conditions: ai < an && bi < n
+    SUBS XZR, x22, x20      
     B.GE quad_sort_merge_end // If ai >= an, exit loop
-    SUBS XZR, x23, x21      // Compare bi to n
+    SUBS XZR, x23, x21      
     B.GE quad_sort_merge_end // If bi >= n, exit loop
 
-    // Load a[ai]
-    LSL x9, x22, #3         // byte offset for ai
+    // grab a[ai]
+    LSL x9, x22, #3      
     ADD x9, x19, x9         // &a[ai]
     LDUR x10, [x9, #0]      // x10 = a[ai]
 
     // Load a[bi]
-    LSL x11, x23, #3        // byte offset for bi
+    LSL x11, x23, #3        
     ADD x11, x19, x11       // &a[bi]
     LDUR x12, [x11, #0]     // x12 = a[bi]
 
-    // 5. If/Else Logic: if (a[ai] <= a[bi])
-    SUBS XZR, x10, x12      // Compare a[ai] and a[bi]
+    //If/Else Logic: if (a[ai] <= a[bi])
+    SUBS XZR, x10, x12      
     B.GT quad_sort_merge_else // If a[ai] > a[bi], go to else block
 
     // If block: ai++
@@ -260,27 +260,26 @@ quad_sort_merge_while:
 
 quad_sort_merge_else:
     // val = a[bi]
-    ADD x24, x12, XZR       // Save a[bi] (already in x12) to val (x24)
+    ADD x24, x12, XZR       //save a[bi] (already in x12) to val (x24)
 
-    // Setup and call quad_sort_shift(a, bi, ai)
-    ADD x0, x19, XZR        // Arg 1: a
-    ADD x1, x23, XZR        // Arg 2: last (bi)
-    ADD x2, x22, XZR        // Arg 3: hole (ai)
+    // setupand call 
+    ADD x0, x19, XZR        //a
+    ADD x1, x23, XZR        //last (bi)
+    ADD x2, x22, XZR        // hole (ai)
     BL quad_sort_shift
 
     // a[ai] = val
-    LSL x9, x22, #3         // byte offset for ai
+    LSL x9, x22, #3         
     ADD x9, x19, x9         // &a[ai]
     STUR x24, [x9, #0]      // Store val into memory at a[ai]
 
-    // ai++; an++; bi++;
     ADDI x22, x22, #1
     ADDI x20, x20, #1
     ADDI x23, x23, #1
     B quad_sort_merge_while
 
 quad_sort_merge_end:
-    // 6. Stack Teardown (Pop in exact reverse order)
+    //stack teardown 
     LDUR x24, [SP, #0]
     LDUR x23, [SP, #8]
     LDUR x22, [SP, #16]
