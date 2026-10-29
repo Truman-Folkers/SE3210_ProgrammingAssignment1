@@ -2,24 +2,37 @@
 // Name: Michael, NetID: [NetID]
 
 main:
-// 1. Setup arguments and call check_sorted
-    ADD X0, X19, XZR       // Arg 1: a (assuming X19 still holds base address)
-    ADD X1, X20, XZR       // Arg 2: N (assuming X20 still holds size)
-    BL check_sorted        // X0 will hold the result
+    // 1. Initialize Array Base Address (a) and Size (N)
+    ADDI X19, XZR, #0       // X19 = a = 0 (Base memory address)
+    ADDI X20, XZR, #16      // X20 = N = 16 (Test array size)
 
-    // 2. Evaluate the result
-    // (Assuming our version: X0 = 0 means sorted, X0 = 1 means unsorted)
-    SUBS XZR, X0, XZR      // Compare X0 to 0
-    B.NE not_sorted_trap   // If X0 != 0 (unsorted), branch to the trap
+    // 2. Call fill(a, N)
+    ADD X0, X19, XZR        // Arg 1: a
+    ADD X1, X20, XZR        // Arg 2: N
+    BL fill
 
-    // 3. Success state (Sorted)
-    DUMP                   // Optional: visually verify memory one last time
-    HALT                   // Gracefully terminate the emulator
+    // 3. Call quad_sort(a, N)
+    ADD X0, X19, XZR        // Arg 1: a
+    ADD X1, X20, XZR        // Arg 2: N
+    BL quad_sort
+
+    // 4. Call check_sorted(a, N)
+    ADD X0, X19, XZR        // Arg 1: a
+    ADD X1, X20, XZR        // Arg 2: N
+    BL check_sorted
+
+    // 5. Evaluate results 
+    // (Assuming check_sorted returns 1 if sorted, and 0 if unsorted)
+    SUBS XZR, X0, XZR       // Compare return value (X0) to 0
+    B.EQ not_sorted_trap    // If X0 == 0 (unsorted), branch to the trap
+
+    // 6. Success state (Sorted)
+    DUMP                    // Visually verify the sorted memory layout
+    HALT                    // Terminate the emulator properly
 
 not_sorted_trap:
-    // 4. Failure state (Unsorted)
-    // By infinitely branching to itself, the emulator will just spin 
-    // rather than executing a HALT, fulfilling the comment's requirement.
+    // 7. Failure state (Unsorted)
+    // Infinite loop simulates the "should not actually halt" requirement
     B not_sorted_trap
 
 //---------------------------------------------------------------------------
