@@ -2,26 +2,25 @@
 // Name: Michael, NetID: [NetID]
 
 main:
-    // 1. Fill the array with [3, 2, 1]
-    ADDI x0, XZR, #0       // Arg 1 (a) = 0
-    ADDI x1, XZR, #3       // Arg 2 (n) = 3
-    BL fill
+// 1. Setup arguments and call check_sorted
+    ADD X0, X19, XZR       // Arg 1: a (assuming X19 still holds base address)
+    ADD X1, X20, XZR       // Arg 2: N (assuming X20 still holds size)
+    BL check_sorted        // X0 will hold the result
 
-    // 2. Execute the sort (Outer loop)
-    ADDI x0, XZR, #0       // Reset Arg 1 (a) = 0
-    ADDI x1, XZR, #3       // Reset Arg 2 (n) = 3
-    BL quad_sort_helper    // Should sort the array to [1, 2, 3]
+    // 2. Evaluate the result
+    // (Assuming our version: X0 = 0 means sorted, X0 = 1 means unsorted)
+    SUBS XZR, X0, XZR      // Compare X0 to 0
+    B.NE not_sorted_trap   // If X0 != 0 (unsorted), branch to the trap
 
-    // 3. Verify it sorted correctly
-    ADDI x0, XZR, #0       // Reset Arg 1 (a) = 0
-    ADDI x1, XZR, #3       // Reset Arg 2 (n) = 3
-    BL check_sorted        // Returns 0 in x0 if sorted
+    // 3. Success state (Sorted)
+    DUMP                   // Optional: visually verify memory one last time
+    HALT                   // Gracefully terminate the emulator
 
-    // 4. Output the results
-    PRNT x0                // Should print 0
-    PRNL                   
-    DUMP                   // Dumps memory to visually confirm array layout
-    HALT
+not_sorted_trap:
+    // 4. Failure state (Unsorted)
+    // By infinitely branching to itself, the emulator will just spin 
+    // rather than executing a HALT, fulfilling the comment's requirement.
+    B not_sorted_trap
 
 //---------------------------------------------------------------------------
 
