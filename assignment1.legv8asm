@@ -204,8 +204,33 @@ quad_sort_shift_end:
 //---------------------------------------------------------------------------
 
 quad_sort_merge:
+    //x0 = a, x1 = an, x2 = n
+    //might need to allocate stack space if we want to
+    //keep these vars, do they leave when branched?
+    ADDI x3, xzr, #0    //x3 = ai = 0
+    ADDI x4, x1, #0     //x4 = bi = an
+
+    //compare a[an - 1] > a[bi] and branch to end if not
+    SUBI x5, x1, #1
+    LSL x5, x5, #3
+    ADD x5, x5, x0
+
+    LDUR x5, [x5, #0] //x5 = a[an - 1]
+    
+    LSL x6, x4, #3
+    ADD x6, x6, x0
+
+    LDUR x6, [x6, #0] //x6 = a[bi]
+
+    SUBS XZR, X5, X6
+    B.GE quad_sort_merge_loop
+    B.LE quad_sort_merge_end
+
+quad_sort_merge_loop:
+
 
 quad_sort_merge_end:
+    BR LR
 
 //---------------------------------------------------------------------------
 
