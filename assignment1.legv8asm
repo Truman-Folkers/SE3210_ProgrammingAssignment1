@@ -2,34 +2,34 @@
 // Name: Michael Fangman, NetID: elix
 
 main:
-    // 1. Initialize Array Base Address (a) and Size (N)
+    //init array Base Address (a) and Size (N)
     ADDI X19, XZR, #0       // X19 = a = 0 (Base memory address)
     ADDI X20, XZR, #16      // X20 = N = 16 (Test array size)
 
-    //call fill(a, N)
+    //call fill
     ADD X0, X19, XZR        // Arg 1: a
     ADD X1, X20, XZR        // Arg 2: N
     BL fill
 
-    //call quad_sort(a, N)
+    //call quad_sort
     ADD X0, X19, XZR        // Arg 1: a
     ADD X1, X20, XZR        // Arg 2: N
     BL quad_sort
 
-    //call check_sorted(a, N)
+    //call check_sorted
     ADD X0, X19, XZR        // Arg 1: a
     ADD X1, X20, XZR        // Arg 2: N
     BL check_sorted
 
-    SUBS XZR, X0, XZR       // Compare return value to 0
-    B.NE FAIL_SPIN          // If X0 != 0 (unsorted), branch to loop
+    SUBS XZR, X0, XZR       
+    B.NE FAIL          //if x0 != 0 (unsorted), branch to loop
 
     // Success state (Sorted)
     DUMP
     HALT
 
-FAIL_SPIN:
-    B FAIL_SPIN
+FAIL:
+    B FAIL //loop infinitely
 
 //---------------------------------------------------------------------------
 
@@ -61,7 +61,7 @@ check_sorted:
     ADD  x2, x0, x2         // x2 = end address (base + n*8)
 
 check_sorted_loop:
-    SUBS XZR, x3, x2        // Compare current address (x3) to end address (x2)
+    SUBS XZR, x3, x2        
     B.GE check_sorted_end   // if current >= end, go to end
 
     SUBI x3, x3, #8         //move x3 back to grab i-1
@@ -72,7 +72,7 @@ check_sorted_loop:
     SUBS XZR, x4, x5
     B.GT check_sorted_early_return      //if x4 > x5 branch to returning 1
     
-    ADDI x3, x3, #8         // Move current address forward by 8 bytes
+    ADDI x3, x3, #8         //move current address forward by 8 bytes
     B check_sorted_loop
 
 check_sorted_early_return:
@@ -104,38 +104,38 @@ swap:
 //---------------------------------------------------------------------------
 
 quad_sort_helper_helper:
-    SUBI SP, SP, #32        // Allocate 32 bytes on the stack for 4 registers
-    STUR LR, [SP, #24]      // Save Link Register (x30)
-    STUR x19, [SP, #16]     // Save original x19
-    STUR x20, [SP, #8]      // Save original x20
-    STUR x21, [SP, #0]      // Save original x21
+    SUBI SP, SP, #32        //allocate 32 bytes on the stack for teh 4 registers
+    STUR LR, [SP, #24]      
+    STUR x19, [SP, #16]     
+    STUR x20, [SP, #8]      
+    STUR x21, [SP, #0]      
 
     ADD x19, x1, XZR        // x19 = n
     ADD x20, x2, XZR        // x20 = i
     ADD x21, XZR, XZR       // x21 = j (starts at 0)
 
 quad_sort_helper_helper_start:
-    SUBS XZR, x21, x19      // Compare j to n
-    B.GE quad_sort_helper_helper_end 
+    SUBS XZR, x21, x19      
+    B.GE quad_sort_helper_helper_end  //branch if x21 > x19
 
     //Load a[j]
-    LSL x12, x21, #3        // Byte offset for j
-    ADD x12, x0, x12        // Absolute address of a[j]
-    LDUR x13, [x12, #0]     // x13 = a[j]
+    LSL x12, x21, #3        //calc byte offset for j
+    ADD x12, x0, x12        // grab address of a[j]
+    LDUR x13, [x12, #0]     //x13 = a[j]
 
     //Load a[i]
-    LSL x14, x20, #3        // Byte offset for i
-    ADD x14, x0, x14        // Absolute address of a[i]
+    LSL x14, x20, #3        //calc byte offset for i
+    ADD x14, x0, x14        // grab address of a[i]
     LDUR x15, [x14, #0]     // x15 = a[i]
 
     //Compare and conditional swap
-    SUBS XZR, x15, x13      // Compare a[i] and a[j]
+    SUBS XZR, x15, x13      
     B.GE quad_sort_helper_helper_continue // If a[i] >= a[j], skip swap
 
     //setup and call swap
-    ADD x1, x20, XZR        // Arg 2: i
-    ADD x2, x21, XZR        // Arg 3: j
-    BL swap                 // Base address a is already in x0
+    ADD x1, x20, XZR        //i
+    ADD x2, x21, XZR        //j
+    BL swap                 //a is already in x0
 
 quad_sort_helper_helper_continue:
     ADDI x21, x21, #1       // j++
@@ -147,14 +147,14 @@ quad_sort_helper_helper_end:
     LDUR x20, [SP, #8]
     LDUR x19, [SP, #16]
     LDUR LR, [SP, #24]
-    ADDI SP, SP, #32        // Deallocate stack space
+    ADDI SP, SP, #32        //deallocate stack space
     BR LR                   // Return
 
 //---------------------------------------------------------------------------
 
 quad_sort_helper:
     //x0 = *a, x1, n
-    SUBI SP, SP, #24
+    SUBI SP, SP, #24 //allocate 3 regs of stack space
     STUR LR, [SP, #16]
     STUR x19, [SP, #8]
     STUR x20, [SP, #0]
@@ -164,7 +164,7 @@ quad_sort_helper:
 
 quad_sort_helper_loop:
     SUBS XZR, x19, x20
-    B.GE quad_sort_helper_end
+    B.GE quad_sort_helper_end //branch if x19 > 20
 
     //branch
     ADD x1, x20, XZR        //arg 2 = n
@@ -175,7 +175,7 @@ quad_sort_helper_loop:
     B quad_sort_helper_loop
 
 quad_sort_helper_end:
-    LDUR x20, [SP, #0]
+    LDUR x20, [SP, #0] //deallocate stack space
     LDUR x19, [SP, #8]
     LDUR LR, [SP, #16]
     ADDI SP, SP, #24
@@ -244,9 +244,9 @@ quad_sort_merge:
 quad_sort_merge_while:
     //while loop conditions: ai < an && bi < n
     SUBS XZR, x22, x20      
-    B.GE quad_sort_merge_end // If ai >= an, exit loop
+    B.GE quad_sort_merge_end //If ai >= an, exit loop
     SUBS XZR, x23, x21      
-    B.GE quad_sort_merge_end // If bi >= n, exit loop
+    B.GE quad_sort_merge_end //if bi >= n, exit loop
 
     // grab a[ai]
     LSL x9, x22, #3      
@@ -260,7 +260,7 @@ quad_sort_merge_while:
 
     //If/Else Logic: if (a[ai] <= a[bi])
     SUBS XZR, x10, x12      
-    B.GT quad_sort_merge_else // If a[ai] > a[bi], go to else block
+    B.GT quad_sort_merge_else //if a[ai] > a[bi], go to else 
 
     // If block: ai++
     ADDI x22, x22, #1       // ai++
@@ -279,7 +279,7 @@ quad_sort_merge_else:
     // a[ai] = val
     LSL x9, x22, #3         
     ADD x9, x19, x9         // &a[ai]
-    STUR x24, [x9, #0]      // Store val into memory at a[ai]
+    STUR x24, [x9, #0]      //store val into memory at a[ai]
 
     ADDI x22, x22, #1
     ADDI x20, x20, #1
@@ -287,7 +287,7 @@ quad_sort_merge_else:
     B quad_sort_merge_while
 
 quad_sort_merge_end:
-    //stack teardown 
+    //stack deallocate 
     LDUR x24, [SP, #0]
     LDUR x23, [SP, #8]
     LDUR x22, [SP, #16]
