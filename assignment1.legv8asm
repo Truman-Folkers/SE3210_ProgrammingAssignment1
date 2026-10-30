@@ -2,34 +2,34 @@
 // Name: Michael Fangman, NetID: elix
 
 main:
-    //init array Base Address (a) and Size (N)
+    // init array Base Address (a) and Size (N)
     ADDI X19, XZR, #0       // X19 = a = 0 (Base memory address)
     ADDI X20, XZR, #16      // X20 = N = 16 (Test array size)
 
-    //call fill
+    // call fill
     ADD X0, X19, XZR        // Arg 1: a
     ADD X1, X20, XZR        // Arg 2: N
     BL fill
 
-    //call quad_sort
+    // call quad_sort
     ADD X0, X19, XZR        // Arg 1: a
     ADD X1, X20, XZR        // Arg 2: N
     BL quad_sort
 
-    //call check_sorted
+    // call check_sorted
     ADD X0, X19, XZR        // Arg 1: a
     ADD X1, X20, XZR        // Arg 2: N
     BL check_sorted
 
     SUBS XZR, X0, XZR       
-    B.NE FAIL          //if x0 != 0 (unsorted), branch to loop
+    B.NE FAIL          // if x0 != 0 (unsorted), branch to loop
 
-    //success state (Sorted)
+    // success state (Sorted)
     DUMP
     HALT
 
 FAIL:
-    B FAIL //loop infinitely
+    B FAIL // loop infinitely
 
 //---------------------------------------------------------------------------
 
@@ -64,48 +64,48 @@ check_sorted_loop:
     SUBS XZR, x3, x2        
     B.GE check_sorted_end   // if current >= end, go to end
 
-    SUBI x3, x3, #8         //move x3 back to grab i-1
-    LDUR x4, [x3, #0]       //grab a[i-1]
-    ADDI x3, x3, #8         //move x3 forwards again
-    LDUR x5, [x3, #0]       //load a[i] into x5
+    SUBI x3, x3, #8         // move x3 back to grab i-1
+    LDUR x4, [x3, #0]       // grab a[i-1]
+    ADDI x3, x3, #8         // move x3 forwards again
+    LDUR x5, [x3, #0]       // load a[i] into x5
 
     SUBS XZR, x4, x5
-    B.GT check_sorted_early_return      //if x4 > x5 branch to returning 1
+    B.GT check_sorted_early_return      // if x4 > x5 branch to returning 1
     
-    ADDI x3, x3, #8         //move current address forward by 8 bytes
+    ADDI x3, x3, #8         // move current address forward by 8 bytes
     B check_sorted_loop
 
 check_sorted_early_return:
-    ADDI x0, XZR, #1  //return 1
-    BR x30 //return
+    ADDI x0, XZR, #1  // return 1
+    BR x30 // return
 
 check_sorted_end:
     ADD x0, XZR, XZR
-    BR x30 //return
+    BR x30 // return
 
 //---------------------------------------------------------------------------
 
 swap:
     // x0 = unsigned long *a, x1 = long i, x2 = long j
 
-    LSL x1, x1, #3    // i * sizeof(unsigned long)
-    ADD x3, x0, x1    // &a[i]
-    LDUR x4, [x3, #0] // tmp = a[i]
+    LSL x1, x1, #3          // i * sizeof(unsigned long)
+    ADD x3, x0, x1          // &a[i]
+    LDUR x4, [x3, #0]       // tmp = a[i]
 
-    LSL x2, x2, #3    // j * sizeof(unsigned long)
-    ADD x5, x0, x2    // &a[j]
-    LDUR x6, [x5, #0] // internal1 = a[j]
+    LSL x2, x2, #3          // j * sizeof(unsigned long)
+    ADD x5, x0, x2          // &a[j]
+    LDUR x6, [x5, #0]       // internal1 = a[j]
 
-    STUR x6, [x3, #0] // store value of a[j] in x3 which is &a[i]
-    STUR x4, [x5, #0] // vice versa ^
+    STUR x6, [x3, #0]       // store value of a[j] in x3 which is &a[i]
+    STUR x4, [x5, #0]       // vice versa ^
 
     BR x30
 
 //---------------------------------------------------------------------------
 
 quad_sort_helper_helper:
-    SUBI SP, SP, #32        //allocate 32 bytes on the stack for teh 4 registers
-    STUR LR, [SP, #24]      
+    SUBI SP, SP, #32        // allocate 32 bytes on the stack for the 4 registers
+    STUR LR, [SP, #32]      
     STUR x19, [SP, #16]     
     STUR x20, [SP, #8]      
     STUR x21, [SP, #0]      
@@ -116,45 +116,45 @@ quad_sort_helper_helper:
 
 quad_sort_helper_helper_start:
     SUBS XZR, x21, x19      
-    B.GE quad_sort_helper_helper_end  //branch if x21 > x19
+    B.GE quad_sort_helper_helper_end  // branch if x21 > x19
 
-    //Load a[j]
-    LSL x12, x21, #3        //calc byte offset for j
+    // Load a[j]
+    LSL x12, x21, #3        // calc byte offset for j
     ADD x12, x0, x12        // grab address of a[j]
-    LDUR x13, [x12, #0]     //x13 = a[j]
+    LDUR x13, [x12, #0]     // x13 = a[j]
 
-    //Load a[i]
-    LSL x14, x20, #3        //calc byte offset for i
+    // Load a[i]
+    LSL x14, x20, #3        // calc byte offset for i
     ADD x14, x0, x14        // grab address of a[i]
     LDUR x15, [x14, #0]     // x15 = a[i]
 
-    //Compare and conditional swap
+    // Compare and conditional swap
     SUBS XZR, x15, x13      
     B.GE quad_sort_helper_helper_continue // If a[i] >= a[j], skip swap
 
-    //setup and call swap
-    ADD x1, x20, XZR        //i
-    ADD x2, x21, XZR        //j
-    BL swap                 //a is already in x0
+    // setup and call swap
+    ADD x1, x20, XZR        // i
+    ADD x2, x21, XZR        // j
+    BL swap                 // a is already in x0
 
 quad_sort_helper_helper_continue:
     ADDI x21, x21, #1       // j++
     B quad_sort_helper_helper_start
 
 quad_sort_helper_helper_end:
-    //Stack Teardown (Restore registers in exact reverse order)
+    // Stack Teardown (Restore registers in exact reverse order)
     LDUR x21, [SP, #0]
     LDUR x20, [SP, #8]
     LDUR x19, [SP, #16]
-    LDUR LR, [SP, #24]
-    ADDI SP, SP, #32        //deallocate stack space
+    LDUR LR, [SP, #32]
+    ADDI SP, SP, #32        // deallocate stack space
     BR LR                   // Return
 
 //---------------------------------------------------------------------------
 
 quad_sort_helper:
-    //x0 = *a, x1, n
-    SUBI SP, SP, #24 //allocate 3 regs of stack space
+    // x0 = *a, x1, n
+    SUBI SP, SP, #32        // allocate 3 regs of stack space with alignment
     STUR LR, [SP, #16]
     STUR x19, [SP, #8]
     STUR x20, [SP, #0]
@@ -164,46 +164,46 @@ quad_sort_helper:
 
 quad_sort_helper_loop:
     SUBS XZR, x19, x20
-    B.GE quad_sort_helper_end //branch if x19 > 20
+    B.GE quad_sort_helper_end // branch if x19 > 20
 
-    //branch
-    ADD x1, x20, XZR        //arg 2 = n
-    ADD x2, x19, XZR        //arg 3 = i
+    // branch
+    ADD x1, x20, XZR        // arg 2 = n
+    ADD x2, x19, XZR        // arg 3 = i
     BL quad_sort_helper_helper
 
     ADDI x19, x19, #1       // i++
     B quad_sort_helper_loop
 
 quad_sort_helper_end:
-    LDUR x20, [SP, #0] //deallocate stack space
+    LDUR x20, [SP, #0]      // deallocate stack space
     LDUR x19, [SP, #8]
     LDUR LR, [SP, #16]
-    ADDI SP, SP, #24
+    ADDI SP, SP, #32
     BR LR
 
 //---------------------------------------------------------------------------
 
 quad_sort_shift:
     // x0 = a, x1 = last, x2 = hole
-    ADD x3, x1, XZR        // x3 = i (starts at last)
+    ADD x3, x1, XZR         // x3 = i (starts at last)
 
 quad_sort_shift_loop:
     SUBS XZR, x3, x2   
     B.EQ quad_sort_shift_end //if i == hole, exit loop
 
-    //load a[i]
-    SUBI x4, x3, #1        // x4 = i - 1
-    LSL x4, x4, #3         // x4 = (i - 1) * 8
-    ADD x4, x0, x4         // x4 = &a[i-1]
-    LDUR x5, [x4, #0]      // x5 = value of a[i-1]
+    // load a[i]
+    SUBI x4, x3, #1         // x4 = i - 1
+    LSL x4, x4, #3          // x4 = (i - 1) * 8
+    ADD x4, x0, x4          // x4 = &a[i-1]
+    LDUR x5, [x4, #0]       // x5 = value of a[i-1]
 
-    //store into a[i]
-    LSL x6, x3, #3         // x6 = i * 8 
-    ADD x6, x0, x6         // x6 = &a[i]
-    STUR x5, [x6, #0]      // a[i] = a[i-1]
+    // store into a[i]
+    LSL x6, x3, #3          // x6 = i * 8 
+    ADD x6, x0, x6          // x6 = &a[i]
+    STUR x5, [x6, #0]       // a[i] = a[i-1]
 
-    //decrement loop counter
-    SUBI x3, x3, #1        // i--
+    // decrement loop counter
+    SUBI x3, x3, #1         // i--
     B quad_sort_shift_loop
 
 quad_sort_shift_end:
@@ -212,8 +212,8 @@ quad_sort_shift_end:
 //---------------------------------------------------------------------------
 
 quad_sort_merge:
-//x0 = a, x1 = an, x2 = n
-    SUBI SP, SP, #56
+    // x0 = a, x1 = an, x2 = n
+    SUBI SP, SP, #64
     STUR LR, [SP, #48]
     STUR x19, [SP, #40]     // a
     STUR x20, [SP, #32]     // an
@@ -238,11 +238,11 @@ quad_sort_merge:
     ADD x11, x19, x11       // x11 = &a[bi]
     LDUR x12, [x11, #0]     // x12 = a[bi]
 
-    SUBS XZR, x10, x12      //cmp a[an-1] and a[bi]
-    B.LE quad_sort_merge_end //if a[an-1] <= a[bi], skip while
+    SUBS XZR, x10, x12      // cmp a[an-1] and a[bi]
+    B.LE quad_sort_merge_end // if a[an-1] <= a[bi], skip while
 
 quad_sort_merge_while:
-    //while loop conditions: ai < an && bi < n
+    // while loop conditions: ai < an && bi < n
     SUBS XZR, x22, x20      
     B.GE quad_sort_merge_end //If ai >= an, exit loop
     SUBS XZR, x23, x21      
@@ -260,7 +260,7 @@ quad_sort_merge_while:
 
     //If/Else Logic: if (a[ai] <= a[bi])
     SUBS XZR, x10, x12      
-    B.GT quad_sort_merge_else //if a[ai] > a[bi], go to else 
+    B.GT quad_sort_merge_else // if a[ai] > a[bi], go to else 
 
     // If block: ai++
     ADDI x22, x22, #1       // ai++
@@ -268,11 +268,11 @@ quad_sort_merge_while:
 
 quad_sort_merge_else:
     // val = a[bi]
-    ADD x24, x12, XZR       //save a[bi] (already in x12) to val (x24)
+    ADD x24, x12, XZR       // save a[bi] (already in x12) to val (x24)
 
     // setupand call 
-    ADD x0, x19, XZR        //a
-    ADD x1, x23, XZR        //last (bi)
+    ADD x0, x19, XZR        // a
+    ADD x1, x23, XZR        // last (bi)
     ADD x2, x22, XZR        // hole (ai)
     BL quad_sort_shift
 
@@ -287,7 +287,7 @@ quad_sort_merge_else:
     B quad_sort_merge_while
 
 quad_sort_merge_end:
-    //stack deallocate 
+    // stack deallocate 
     LDUR x24, [SP, #0]
     LDUR x23, [SP, #8]
     LDUR x22, [SP, #16]
@@ -295,62 +295,62 @@ quad_sort_merge_end:
     LDUR x20, [SP, #32]
     LDUR x19, [SP, #40]
     LDUR LR, [SP, #48]
-    ADDI SP, SP, #56
+    ADDI SP, SP, #64
     BR LR
 
 //---------------------------------------------------------------------------
 
 quad_sort:
-    //x0 = a, x1 = n
-    //setup stack
-    SUBI SP, SP, #24
+    // x0 = a, x1 = n
+    // setup stack
+    SUBI SP, SP, #32
     STUR LR, [SP, #16]
-    STUR x19, [SP, #8] //a
-    STUR x20, [SP, #0] //n
+    STUR x19, [SP, #8]  // a
+    STUR x20, [SP, #0]  // n
 
-    ADD x19, x0, XZR  //x19 = a
-    ADD x20, x1, XZR  //x20 = n
+    ADD x19, x0, XZR    // x19 = a
+    ADD x20, x1, XZR    // x20 = n
 
-    //first helper call
+    // first helper call
     LSR x2, x20, #2
-    ADD x1, x2, XZR //x1 = n >>2
+    ADD x1, x2, XZR // x1 = n >>2
     ADD X0, X19, XZR
 
     BL quad_sort_helper
 
-    //second helper call
-    LSR X2, X20, #2      //x2 = n >> 2
-    ADD X1, X2, XZR      //put n >> 2 in x1
+    // second helper call
+    LSR X2, X20, #2     // x2 = n >> 2
+    ADD X1, X2, XZR     // put n >> 2 in x1
     
-    LSL X2, X2, #3    //scale x2 for mem offset
-    ADD X0, X19, X2   //a + (scaled offset)
+    LSL X2, X2, #3      // scale x2 for mem offset
+    ADD X0, X19, X2     // a + (scaled offset)
     
     BL quad_sort_helper
 
-    //third helper call
+    // third helper call
     LSR x2, x20, #2
-    ADD x1, x2, XZR     //x1 = n >> 2
-    LSL x2, x2, #1      //n >> 2 << 1
-    LSL x2, x2, #3 //map data correctly
-    ADD x0, x19, x2     //x0 = a + n >> 2
+    ADD x1, x2, XZR     // x1 = n >> 2
+    LSL x2, x2, #1      // n >> 2 << 1
+    LSL x2, x2, #3      // map data correctly
+    ADD x0, x19, x2     // x0 = a + n >> 2
 
     BL quad_sort_helper
 
-    //fourth helper call
-    LSR x2, x20, #2 //x2 = n >> 2
-    LSL x3, x2, #1  //x3 = n >> 2 << 1
-    ADD x4, x2, x3  //add the two
+    // fourth helper call
+    LSR x2, x20, #2     // x2 = n >> 2
+    LSL x3, x2, #1      // x3 = n >> 2 << 1
+    ADD x4, x2, x3      // add the two
 
     LSL X5, X4, #3
-    ADD x0, x19, x5   //a + ((n >> 2) + ((n >> 2 << 1)))
+    ADD x0, x19, x5     // a + ((n >> 2) + ((n >> 2 << 1)))
 
     SUB x1, x20, X4
     
     BL quad_sort_helper
 
-    //first merge call
-    LSR x3, x20, #2 //x3 = n >> 2
-    LSL x4, x3, #1 //x4 = n >> 2 << 1
+    // first merge call
+    LSR x3, x20, #2     // x3 = n >> 2
+    LSL x4, x3, #1      // x4 = n >> 2 << 1
 
     ADD x0, x19, XZR
     ADD x1, x3, XZR
@@ -358,20 +358,20 @@ quad_sort:
 
     BL quad_sort_merge
 
-    //second merge call
-    LSR x2, x20, #2 //x2 = n >> 2
-    LSL x3, x2, #1 //x3 = n >> 2 << 1
+    // second merge call
+    LSR x2, x20, #2     // x2 = n >> 2
+    LSL x3, x2, #1      // x3 = n >> 2 << 1
 
-    //setting up for branch
+    // setting up for branch
     ADD x0, x19, XZR
     ADD x1, x3, XZR
     ADD x2, x2, x3
 
     BL quad_sort_merge
 
-    //third merge call
-    LSR x2, x20, #2 //x2 = n >> 2
-    LSL x3, x2, #1 //x3 = n >> 2 << 1
+    // third merge call
+    LSR x2, x20, #2     // x2 = n >> 2
+    LSL x3, x2, #1      // x3 = n >> 2 << 1
 
     ADD x0, x19, XZR
     ADD x1, x2, x3
@@ -379,11 +379,10 @@ quad_sort:
 
     BL quad_sort_merge
 
-    //tear down stack
+    // tear down stack
     LDUR x20, [SP, #0]
     LDUR x19, [SP, #8]
     LDUR LR, [SP, #16]
-    ADDI SP, SP, #24
+    ADDI SP, SP, #32
 
     BR LR
-
