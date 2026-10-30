@@ -21,15 +21,15 @@ main:
     ADD X1, X20, XZR        // Arg 2: N
     BL check_sorted
 
-    SUBS XZR, X0, XZR       // Compare return value (X0) to 0
-    B.EQ trap    //If X0 == 0 (unsorted), branch to the trap
+    SUBS XZR, X0, XZR       // Compare return value to 0
+    B.NE FAIL_SPIN          // If X0 != 0 (unsorted), branch to loop
 
-    // 6. Success state (Sorted)
-    DUMP                   
-    HALT                   
+    // Success state (Sorted)
+    DUMP
+    HALT
 
-trap:
-    B trap
+FAIL_SPIN:
+    B FAIL_SPIN
 
 //---------------------------------------------------------------------------
 
