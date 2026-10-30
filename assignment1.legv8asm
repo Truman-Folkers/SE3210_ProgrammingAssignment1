@@ -24,7 +24,7 @@ main:
     SUBS XZR, X0, XZR       
     B.NE FAIL          //if x0 != 0 (unsorted), branch to loop
 
-    // Success state (Sorted)
+    //success state (Sorted)
     DUMP
     HALT
 
