@@ -105,7 +105,7 @@ swap:
 
 quad_sort_helper_helper:
     SUBI SP, SP, #32        // allocate 32 bytes on the stack for the 4 registers
-    STUR LR, [SP, #32]      
+    STUR LR, [SP, #24]      
     STUR x19, [SP, #16]     
     STUR x20, [SP, #8]      
     STUR x21, [SP, #0]      
@@ -146,7 +146,7 @@ quad_sort_helper_helper_end:
     LDUR x21, [SP, #0]
     LDUR x20, [SP, #8]
     LDUR x19, [SP, #16]
-    LDUR LR, [SP, #32]
+    LDUR LR, [SP, #24]
     ADDI SP, SP, #32        // deallocate stack space
     BR LR                   // Return
 
